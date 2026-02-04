@@ -1,0 +1,772 @@
+{
+    "original_warehouse": {
+        "warehouse_dimensions": {
+            "width": 20.0,
+            "height": 60.0
+        },
+        "racks": {
+            "count": 5,
+            "width": 3.0,
+            "height": 50.0,
+            "positions": [
+                {
+                    "x": 6.833333333333334,
+                    "y": 5.0
+                },
+                {
+                    "x": 9.166666666666668,
+                    "y": 5.0
+                },
+                {
+                    "x": 11.5,
+                    "y": 5.0
+                },
+                {
+                    "x": 13.833333333333334,
+                    "y": 5.0
+                },
+                {
+                    "x": 16.166666666666668,
+                    "y": 5.0
+                }
+            ]
+        },
+        "aisle_width": 3.0,
+        "loading_docks": [
+            {
+                "x": 2.5,
+                "y": 2.5
+            }
+        ],
+        "shipping_area": {
+            "x": 15.0,
+            "y": 55.0,
+            "width": 5.0,
+            "height": 5.0
+        }
+    },
+    "robotic_warehouse": {
+        "warehouse_dimensions": {
+            "width": 20.0,
+            "height": 60.0
+        },
+        "racks": {
+            "count": 5,
+            "width": 3.0,
+            "height": 50.0,
+            "positions": [
+                {
+                    "x": 6.833333333333334,
+                    "y": 5.0
+                },
+                {
+                    "x": 9.166666666666668,
+                    "y": 5.0
+                },
+                {
+                    "x": 11.5,
+                    "y": 5.0
+                },
+                {
+                    "x": 13.833333333333334,
+                    "y": 5.0
+                },
+                {
+                    "x": 16.166666666666668,
+                    "y": 5.0
+                }
+            ]
+        },
+        "aisle_width": 3.0,
+        "loading_docks": [
+            {
+                "x": 2.5,
+                "y": 2.5
+            }
+        ],
+        "shipping_area": {
+            "x": 15.0,
+            "y": 55.0,
+            "width": 5.0,
+            "height": 5.0
+        },
+        "charging_stations": [
+            {
+                "x": 1.5,
+                "y": 8.0
+            },
+            {
+                "x": 1.5,
+                "y": 30.0
+            },
+            {
+                "x": 18.5,
+                "y": 52.0
+            }
+        ],
+        "conversion_notes": [
+            "Current aisle width (3.0m) is acceptable but below optimal (3.5m). May limit robot speed.",
+            "Built navigation graph with 17 nodes.",
+            "Computed 17x17 distance matrix using Floyd-Warshall algorithm.",
+            "Placed 3 charging stations along warehouse walls for optimal coverage without blocking aisles.",
+            "Generated 7 traffic rules for efficient navigation.",
+            "Aisle width score: 3.0/4.0",
+            "Layout regularity score: 2.5/2.5",
+            "Space utilization score: 1.0/2.0 (utilization: 62.5%)",
+            "Accessibility score: 1.5/1.5",
+            "Final feasibility score: 8.0/10.0"
+        ],
+        "feasibility_score": 8.0
+    },
+    "navigation_graph": {
+        "nodes": [
+            {
+                "id": "node_pickup",
+                "x": 2.5,
+                "y": 2.5,
+                "type": "pickup"
+            },
+            {
+                "id": "node_drop",
+                "x": 17.5,
+                "y": 57.5,
+                "type": "drop"
+            },
+            {
+                "id": "node_aisle_1_entry",
+                "x": 8.333333333333334,
+                "y": 5.0,
+                "type": "aisle_entry"
+            },
+            {
+                "id": "node_aisle_1_mid",
+                "x": 8.333333333333334,
+                "y": 30.0,
+                "type": "waypoint"
+            },
+            {
+                "id": "node_aisle_1_exit",
+                "x": 8.333333333333334,
+                "y": 55.0,
+                "type": "aisle_exit"
+            },
+            {
+                "id": "node_aisle_2_entry",
+                "x": 10.666666666666668,
+                "y": 5.0,
+                "type": "aisle_entry"
+            },
+            {
+                "id": "node_aisle_2_mid",
+                "x": 10.666666666666668,
+                "y": 30.0,
+                "type": "waypoint"
+            },
+            {
+                "id": "node_aisle_2_exit",
+                "x": 10.666666666666668,
+                "y": 55.0,
+                "type": "aisle_exit"
+            },
+            {
+                "id": "node_aisle_3_entry",
+                "x": 13.0,
+                "y": 5.0,
+                "type": "aisle_entry"
+            },
+            {
+                "id": "node_aisle_3_mid",
+                "x": 13.0,
+                "y": 30.0,
+                "type": "waypoint"
+            },
+            {
+                "id": "node_aisle_3_exit",
+                "x": 13.0,
+                "y": 55.0,
+                "type": "aisle_exit"
+            },
+            {
+                "id": "node_aisle_4_entry",
+                "x": 15.333333333333334,
+                "y": 5.0,
+                "type": "aisle_entry"
+            },
+            {
+                "id": "node_aisle_4_mid",
+                "x": 15.333333333333334,
+                "y": 30.0,
+                "type": "waypoint"
+            },
+            {
+                "id": "node_aisle_4_exit",
+                "x": 15.333333333333334,
+                "y": 55.0,
+                "type": "aisle_exit"
+            },
+            {
+                "id": "node_aisle_5_entry",
+                "x": 17.666666666666668,
+                "y": 5.0,
+                "type": "aisle_entry"
+            },
+            {
+                "id": "node_aisle_5_mid",
+                "x": 17.666666666666668,
+                "y": 30.0,
+                "type": "waypoint"
+            },
+            {
+                "id": "node_aisle_5_exit",
+                "x": 17.666666666666668,
+                "y": 55.0,
+                "type": "aisle_exit"
+            }
+        ],
+        "edges": [
+            {
+                "from": "node_pickup",
+                "to": "node_aisle_1_entry",
+                "distance": 6.35,
+                "bidirectional": true
+            },
+            {
+                "from": "node_aisle_5_exit",
+                "to": "node_drop",
+                "distance": 2.51,
+                "bidirectional": true
+            },
+            {
+                "from": "node_aisle_1_entry",
+                "to": "node_aisle_1_mid",
+                "distance": 25.0,
+                "bidirectional": true
+            },
+            {
+                "from": "node_aisle_1_mid",
+                "to": "node_aisle_1_exit",
+                "distance": 25.0,
+                "bidirectional": true
+            },
+            {
+                "from": "node_aisle_2_entry",
+                "to": "node_aisle_2_mid",
+                "distance": 25.0,
+                "bidirectional": true
+            },
+            {
+                "from": "node_aisle_2_mid",
+                "to": "node_aisle_2_exit",
+                "distance": 25.0,
+                "bidirectional": true
+            },
+            {
+                "from": "node_aisle_3_entry",
+                "to": "node_aisle_3_mid",
+                "distance": 25.0,
+                "bidirectional": true
+            },
+            {
+                "from": "node_aisle_3_mid",
+                "to": "node_aisle_3_exit",
+                "distance": 25.0,
+                "bidirectional": true
+            },
+            {
+                "from": "node_aisle_4_entry",
+                "to": "node_aisle_4_mid",
+                "distance": 25.0,
+                "bidirectional": true
+            },
+            {
+                "from": "node_aisle_4_mid",
+                "to": "node_aisle_4_exit",
+                "distance": 25.0,
+                "bidirectional": true
+            },
+            {
+                "from": "node_aisle_5_entry",
+                "to": "node_aisle_5_mid",
+                "distance": 25.0,
+                "bidirectional": true
+            },
+            {
+                "from": "node_aisle_5_mid",
+                "to": "node_aisle_5_exit",
+                "distance": 25.0,
+                "bidirectional": true
+            },
+            {
+                "from": "node_aisle_1_entry",
+                "to": "node_aisle_2_entry",
+                "distance": 2.33,
+                "bidirectional": true
+            },
+            {
+                "from": "node_aisle_2_entry",
+                "to": "node_aisle_3_entry",
+                "distance": 2.33,
+                "bidirectional": true
+            },
+            {
+                "from": "node_aisle_3_entry",
+                "to": "node_aisle_4_entry",
+                "distance": 2.33,
+                "bidirectional": true
+            },
+            {
+                "from": "node_aisle_4_entry",
+                "to": "node_aisle_5_entry",
+                "distance": 2.33,
+                "bidirectional": true
+            },
+            {
+                "from": "node_aisle_1_mid",
+                "to": "node_aisle_2_mid",
+                "distance": 2.33,
+                "bidirectional": true
+            },
+            {
+                "from": "node_aisle_2_mid",
+                "to": "node_aisle_3_mid",
+                "distance": 2.33,
+                "bidirectional": true
+            },
+            {
+                "from": "node_aisle_3_mid",
+                "to": "node_aisle_4_mid",
+                "distance": 2.33,
+                "bidirectional": true
+            },
+            {
+                "from": "node_aisle_4_mid",
+                "to": "node_aisle_5_mid",
+                "distance": 2.33,
+                "bidirectional": true
+            },
+            {
+                "from": "node_aisle_1_exit",
+                "to": "node_aisle_2_exit",
+                "distance": 2.33,
+                "bidirectional": true
+            },
+            {
+                "from": "node_aisle_2_exit",
+                "to": "node_aisle_3_exit",
+                "distance": 2.33,
+                "bidirectional": true
+            },
+            {
+                "from": "node_aisle_3_exit",
+                "to": "node_aisle_4_exit",
+                "distance": 2.33,
+                "bidirectional": true
+            },
+            {
+                "from": "node_aisle_4_exit",
+                "to": "node_aisle_5_exit",
+                "distance": 2.33,
+                "bidirectional": true
+            }
+        ]
+    },
+    "distance_matrix": [
+        [
+            0.0,
+            68.18,
+            6.35,
+            31.35,
+            56.35,
+            8.68,
+            33.68,
+            58.68,
+            11.01,
+            36.01,
+            61.01,
+            13.34,
+            38.34,
+            63.34,
+            15.67,
+            40.67,
+            65.67
+        ],
+        [
+            68.18,
+            0.0,
+            61.83,
+            36.83,
+            11.83,
+            59.5,
+            34.5,
+            9.5,
+            57.17,
+            32.17,
+            7.17,
+            54.84,
+            29.84,
+            4.84,
+            52.51,
+            27.51,
+            2.51
+        ],
+        [
+            6.35,
+            61.83,
+            0.0,
+            25.0,
+            50.0,
+            2.33,
+            27.33,
+            52.33,
+            4.66,
+            29.66,
+            54.66,
+            6.99,
+            31.99,
+            56.99,
+            9.32,
+            34.32,
+            59.32
+        ],
+        [
+            31.35,
+            36.83,
+            25.0,
+            0.0,
+            25.0,
+            27.33,
+            2.33,
+            27.33,
+            29.66,
+            4.66,
+            29.66,
+            31.99,
+            6.99,
+            31.99,
+            34.32,
+            9.32,
+            34.32
+        ],
+        [
+            56.35,
+            11.83,
+            50.0,
+            25.0,
+            0.0,
+            52.33,
+            27.33,
+            2.33,
+            54.66,
+            29.66,
+            4.66,
+            56.99,
+            31.99,
+            6.99,
+            59.32,
+            34.32,
+            9.32
+        ],
+        [
+            8.68,
+            59.5,
+            2.33,
+            27.33,
+            52.33,
+            0.0,
+            25.0,
+            50.0,
+            2.33,
+            27.33,
+            52.33,
+            4.66,
+            29.66,
+            54.66,
+            6.99,
+            31.99,
+            56.99
+        ],
+        [
+            33.68,
+            34.5,
+            27.33,
+            2.33,
+            27.33,
+            25.0,
+            0.0,
+            25.0,
+            27.33,
+            2.33,
+            27.33,
+            29.66,
+            4.66,
+            29.66,
+            31.99,
+            6.99,
+            31.99
+        ],
+        [
+            58.68,
+            9.5,
+            52.33,
+            27.33,
+            2.33,
+            50.0,
+            25.0,
+            0.0,
+            52.33,
+            27.33,
+            2.33,
+            54.66,
+            29.66,
+            4.66,
+            56.99,
+            31.99,
+            6.99
+        ],
+        [
+            11.01,
+            57.17,
+            4.66,
+            29.66,
+            54.66,
+            2.33,
+            27.33,
+            52.33,
+            0.0,
+            25.0,
+            50.0,
+            2.33,
+            27.33,
+            52.33,
+            4.66,
+            29.66,
+            54.66
+        ],
+        [
+            36.01,
+            32.17,
+            29.66,
+            4.66,
+            29.66,
+            27.33,
+            2.33,
+            27.33,
+            25.0,
+            0.0,
+            25.0,
+            27.33,
+            2.33,
+            27.33,
+            29.66,
+            4.66,
+            29.66
+        ],
+        [
+            61.01,
+            7.17,
+            54.66,
+            29.66,
+            4.66,
+            52.33,
+            27.33,
+            2.33,
+            50.0,
+            25.0,
+            0.0,
+            52.33,
+            27.33,
+            2.33,
+            54.66,
+            29.66,
+            4.66
+        ],
+        [
+            13.34,
+            54.84,
+            6.99,
+            31.99,
+            56.99,
+            4.66,
+            29.66,
+            54.66,
+            2.33,
+            27.33,
+            52.33,
+            0.0,
+            25.0,
+            50.0,
+            2.33,
+            27.33,
+            52.33
+        ],
+        [
+            38.34,
+            29.84,
+            31.99,
+            6.99,
+            31.99,
+            29.66,
+            4.66,
+            29.66,
+            27.33,
+            2.33,
+            27.33,
+            25.0,
+            0.0,
+            25.0,
+            27.33,
+            2.33,
+            27.33
+        ],
+        [
+            63.34,
+            4.84,
+            56.99,
+            31.99,
+            6.99,
+            54.66,
+            29.66,
+            4.66,
+            52.33,
+            27.33,
+            2.33,
+            50.0,
+            25.0,
+            0.0,
+            52.33,
+            27.33,
+            2.33
+        ],
+        [
+            15.67,
+            52.51,
+            9.32,
+            34.32,
+            59.32,
+            6.99,
+            31.99,
+            56.99,
+            4.66,
+            29.66,
+            54.66,
+            2.33,
+            27.33,
+            52.33,
+            0.0,
+            25.0,
+            50.0
+        ],
+        [
+            40.67,
+            27.51,
+            34.32,
+            9.32,
+            34.32,
+            31.99,
+            6.99,
+            31.99,
+            29.66,
+            4.66,
+            29.66,
+            27.33,
+            2.33,
+            27.33,
+            25.0,
+            0.0,
+            25.0
+        ],
+        [
+            65.67,
+            2.51,
+            59.32,
+            34.32,
+            9.32,
+            56.99,
+            31.99,
+            6.99,
+            54.66,
+            29.66,
+            4.66,
+            52.33,
+            27.33,
+            2.33,
+            50.0,
+            25.0,
+            0.0
+        ]
+    ],
+    "traffic_rules": {
+        "one_way_aisles": [
+            {
+                "aisle": "one_way_aisle_1",
+                "direction": "forward",
+                "description": "Aisle 1: northbound traffic only"
+            },
+            {
+                "aisle": "one_way_aisle_2",
+                "direction": "forward",
+                "description": "Aisle 2: southbound traffic only"
+            },
+            {
+                "aisle": "one_way_aisle_3",
+                "direction": "forward",
+                "description": "Aisle 3: northbound traffic only"
+            },
+            {
+                "aisle": "one_way_aisle_4",
+                "direction": "forward",
+                "description": "Aisle 4: southbound traffic only"
+            },
+            {
+                "aisle": "one_way_aisle_5",
+                "direction": "forward",
+                "description": "Aisle 5: northbound traffic only"
+            }
+        ],
+        "priority_zones": [
+            {
+                "name": "pickup_zone",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 5.0,
+                "height": 5.0,
+                "priority": "high"
+            },
+            {
+                "name": "drop_zone",
+                "x": 15.0,
+                "y": 55.0,
+                "width": 5.0,
+                "height": 5.0,
+                "priority": "high"
+            }
+        ],
+        "no_stopping_zones": [
+            {
+                "x": 2.5,
+                "y": 5.0,
+                "width": 15.0,
+                "height": 2.0
+            },
+            {
+                "x": 2.5,
+                "y": 53.0,
+                "width": 15.0,
+                "height": 2.0
+            }
+        ]
+    },
+    "summary": {
+        "total_nodes": 17,
+        "total_edges": 24,
+        "charging_stations_count": 3,
+        "feasibility_score": 8.0,
+        "aisle_width_adequate": true,
+        "recommendations": [
+            "Aisle width meets minimum requirements for robot operation",
+            "Regular grid layout is ideal for autonomous navigation",
+            "Total of 3 charging stations placed strategically",
+            "Warehouse is highly suitable for robotic retrofit"
+        ]
+    }
+}
