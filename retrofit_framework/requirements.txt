@@ -6,6 +6,7 @@ pydantic-settings>=2.1.0
 
 # Data processing
 numpy>=1.26.3
+matplotlib>=3.8.0
 
 # Optional dependencies for development
 python-multipart>=0.0.6  # For file uploads

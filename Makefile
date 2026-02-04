@@ -1,5 +1,6 @@
 .PHONY: all setup install run clean \
-        api-root api-health api-convert api-summary api-graph api-matrix api-traffic api-all
+        api-root api-health api-convert api-summary api-graph api-matrix api-traffic api-all \
+        viz-ascii viz-images viz-examples viz-test demo
 
 VENV := venv
 PYTHON := $(VENV)/bin/python
@@ -107,3 +108,76 @@ api-test:
 	@curl -s -o /dev/null -w "Health: %{http_code}\n" $(BASE_URL)/health
 	@curl -s -o /dev/null -w "Convert: %{http_code}\n" $(BASE_URL)/api/v1/convert/layouta
 	@echo "All endpoints responding!"
+
+# ============================================================
+# Visualization Commands
+# ============================================================
+
+# Display ASCII layout of the warehouse
+viz-ascii:
+	@echo "=== ASCII Warehouse Layout ==="
+	@cd retrofit_framework && ../$(PYTHON) visualize_layout.py
+
+# Generate before/after PNG images
+viz-images:
+	@echo "=== Generating Visualization Images ==="
+	@cd retrofit_framework && ../$(PYTHON) visualize_conversion.py
+	@echo "Images saved to retrofit_framework/output/images/"
+
+# Run comprehensive examples (data models, JSON export, robotic warehouse)
+viz-examples:
+	@echo "=== Running Comprehensive Examples ==="
+	@cd retrofit_framework && ../$(PYTHON) examples.py
+
+# Test Layout A configuration
+viz-test:
+	@echo "=== Testing Layout A Configuration ==="
+	@cd retrofit_framework && ../$(PYTHON) test_layout_a.py
+
+# Run output module demo
+viz-output-demo:
+	@echo "=== Output Module Demo ==="
+	@cd retrofit_framework && ../$(PYTHON) examples/output_demo.py
+
+# ============================================================
+# Demo Command (Full demonstration sequence)
+# ============================================================
+
+# Run full demo (requires server running in separate terminal)
+demo:
+	@echo "========================================"
+	@echo "  Warehouse Retrofit Framework Demo"
+	@echo "========================================"
+	@echo ""
+	@echo "Step 1: Testing API endpoints..."
+	@make api-test
+	@echo ""
+	@echo "Step 2: Showing conversion summary..."
+	@make api-summary
+	@echo ""
+	@echo "Step 3: Showing charging stations..."
+	@make api-charging
+	@echo ""
+	@echo "Step 4: Showing traffic rules..."
+	@make api-traffic
+	@echo ""
+	@echo "Step 5: Generating ASCII layout..."
+	@make viz-ascii
+	@echo ""
+	@echo "Step 6: Generating visualization images..."
+	@make viz-images
+	@echo ""
+	@echo "Step 7: Saving full conversion to JSON..."
+	@make api-save
+	@echo ""
+	@echo "========================================"
+	@echo "  Demo Complete!"
+	@echo "========================================"
+	@echo ""
+	@echo "Generated files:"
+	@echo "  - output/conversion_result.json"
+	@echo "  - retrofit_framework/output/images/layout_a_before.png"
+	@echo "  - retrofit_framework/output/images/layout_a_after.png"
+	@echo "  - retrofit_framework/output/images/layout_a_comparison.png"
+	@echo ""
+	@echo "Swagger docs: http://localhost:8000/docs"
