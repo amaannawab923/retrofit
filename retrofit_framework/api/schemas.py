@@ -125,13 +125,40 @@ class RoboticWarehouseResponse(BaseModel):
     feasibility_score: float = Field(..., description="Feasibility score (0-10)")
 
 
+class FeasibilityFactorResponse(BaseModel):
+    """Breakdown of a single feasibility scoring factor."""
+
+    name: str = Field(..., description="Factor name")
+    score: float = Field(..., description="Score achieved")
+    max_score: float = Field(..., description="Maximum possible score")
+    weight: str = Field(..., description="Weight percentage")
+    status: str = Field(..., description="Status: optimal, acceptable, marginal, poor, inadequate")
+    detail: str = Field(..., description="Explanation of the score")
+
+
+class FeasibilityAssessmentResponse(BaseModel):
+    """Complete feasibility grading with score breakdown and actionable guidance."""
+
+    score: float = Field(..., description="Overall feasibility score (0-10)")
+    grade: str = Field(..., description="Letter grade: A, B, C, D, or F")
+    label: str = Field(..., description="Human-readable label (e.g., 'Excellent')")
+    verdict: str = Field(..., description="One-line verdict on retrofit readiness")
+    is_feasible: bool = Field(..., description="Whether the warehouse passes minimum viability (score >= 5.0)")
+    factors: List[FeasibilityFactorResponse] = Field(..., description="Per-factor score breakdown")
+    issues: List[str] = Field(..., description="List of issues found")
+    actions: List[str] = Field(..., description="Recommended actions to improve score")
+
+
 class ConversionSummary(BaseModel):
     """Summary of the conversion process."""
 
     total_nodes: int = Field(..., description="Total navigation nodes")
     total_edges: int = Field(..., description="Total navigation edges")
     charging_stations_count: int = Field(..., description="Number of charging stations")
-    feasibility_score: float = Field(..., description="Overall feasibility score")
+    feasibility_score: float = Field(..., description="Overall feasibility score (0-10)")
+    feasibility_assessment: FeasibilityAssessmentResponse = Field(
+        ..., description="Detailed feasibility grading with breakdown, issues, and actions"
+    )
     aisle_width_adequate: bool = Field(..., description="Whether aisle width is adequate")
     recommendations: List[str] = Field(..., description="List of recommendations")
 

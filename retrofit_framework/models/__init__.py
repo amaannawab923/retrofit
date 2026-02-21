@@ -9,6 +9,8 @@ from models.warehouse import (
     LegacyWarehouse,
     RoboticWarehouse,
     TrafficRule,
+    FeasibilityFactor,
+    FeasibilityAssessment,
 )
 from models.agv import AGVConfig, SimulationParams
 
@@ -21,6 +23,8 @@ __all__ = [
     "LegacyWarehouse",
     "RoboticWarehouse",
     "TrafficRule",
+    "FeasibilityFactor",
+    "FeasibilityAssessment",
     "AGVConfig",
     "SimulationParams",
 ]

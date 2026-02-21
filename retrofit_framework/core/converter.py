@@ -13,6 +13,8 @@ from models.warehouse import (
     ZoneType,
     NodeType,
     TrafficRule,
+    FeasibilityFactor,
+    FeasibilityAssessment,
 )
 
 
@@ -64,8 +66,8 @@ class RetrofitConverter:
         # Generate traffic rules
         traffic_rules = self._generate_traffic_rules(warehouse)
 
-        # Calculate feasibility score
-        feasibility_score = self._calculate_feasibility_score(warehouse)
+        # Calculate feasibility score and assessment
+        feasibility_assessment = self._calculate_feasibility_score(warehouse)
 
         # Create the robotic warehouse
         robotic_warehouse = RoboticWarehouse(
@@ -82,7 +84,8 @@ class RetrofitConverter:
             navigation_graph=navigation_graph,
             distance_matrix=distance_matrix,
             traffic_rules=traffic_rules,
-            feasibility_score=feasibility_score,
+            feasibility_score=feasibility_assessment.score,
+            feasibility_assessment=feasibility_assessment,
             conversion_notes=self.conversion_notes,
         )
 
@@ -300,73 +303,286 @@ class RetrofitConverter:
 
         return rules
 
-    def _calculate_feasibility_score(self, warehouse: LegacyWarehouse) -> float:
+    def _calculate_feasibility_score(self, warehouse: LegacyWarehouse) -> FeasibilityAssessment:
         """
-        Calculate overall feasibility score for robotic conversion (0-10 scale).
+        Calculate overall feasibility score for robotic conversion (0-10 scale)
+        and produce a detailed grading assessment.
 
-        Considers:
-        - Aisle width adequacy (40%)
-        - Layout regularity (25%)
-        - Space utilization (20%)
-        - Accessibility (15%)
+        Factors:
+        - Aisle width adequacy (40%, max 4.0 pts)
+        - Layout regularity (25%, max 2.5 pts)
+        - Space utilization (20%, max 2.0 pts)
+        - Accessibility (15%, max 1.5 pts)
+
+        Grade boundaries:
+        - A  (9.0-10.0): Excellent — ready for retrofit
+        - B  (7.0-8.9):  Good — feasible with minor adjustments
+        - C  (5.0-6.9):  Marginal — feasible but needs significant work
+        - D  (3.0-4.9):  Poor — major retrofitting required
+        - F  (0.0-2.9):  Fail — not feasible without complete redesign
 
         Args:
             warehouse: Warehouse specification
 
         Returns:
-            float: Feasibility score (0-10)
+            FeasibilityAssessment: Full grading with score, grade, factors, issues, and actions
         """
         score = 0.0
+        factors: list[FeasibilityFactor] = []
+        issues: list[str] = []
+        actions: list[str] = []
 
-        # Aisle width score (40% weight, max 4 points)
+        # ── Factor 1: Aisle Width (40%, max 4.0) ──
         if warehouse.aisle_width >= self.OPTIMAL_AISLE_WIDTH:
             aisle_score = 4.0
+            aisle_status = "optimal"
+            aisle_detail = (
+                f"Aisle width ({warehouse.aisle_width}m) meets optimal threshold "
+                f"(>= {self.OPTIMAL_AISLE_WIDTH}m). Supports bidirectional AGV traffic at full speed."
+            )
         elif warehouse.aisle_width >= self.MIN_AISLE_WIDTH:
             aisle_score = 3.0
+            aisle_status = "acceptable"
+            aisle_detail = (
+                f"Aisle width ({warehouse.aisle_width}m) meets minimum requirement "
+                f"(>= {self.MIN_AISLE_WIDTH}m) but is below optimal ({self.OPTIMAL_AISLE_WIDTH}m). "
+                f"Bidirectional traffic possible but may require reduced speed."
+            )
+            issues.append(
+                f"Aisle width ({warehouse.aisle_width}m) is below optimal {self.OPTIMAL_AISLE_WIDTH}m — "
+                f"AGVs may need speed reduction in aisles"
+            )
+            actions.append(
+                f"Consider widening aisles from {warehouse.aisle_width}m to {self.OPTIMAL_AISLE_WIDTH}m "
+                f"for full-speed bidirectional traffic"
+            )
         elif warehouse.aisle_width >= 2.5:
             aisle_score = 2.0
+            aisle_status = "marginal"
+            aisle_detail = (
+                f"Aisle width ({warehouse.aisle_width}m) is below minimum recommended "
+                f"({self.MIN_AISLE_WIDTH}m). AGV operation possible but restricted to "
+                f"reduced speed and careful navigation."
+            )
+            issues.append(
+                f"Aisle width ({warehouse.aisle_width}m) is below minimum {self.MIN_AISLE_WIDTH}m — "
+                f"limited to slow, single-direction AGV traffic"
+            )
+            actions.append(
+                f"Widen aisles from {warehouse.aisle_width}m to at least {self.MIN_AISLE_WIDTH}m "
+                f"before deploying AGV fleet"
+            )
         elif warehouse.aisle_width >= 2.0:
             aisle_score = 1.0
+            aisle_status = "poor"
+            aisle_detail = (
+                f"Aisle width ({warehouse.aisle_width}m) only supports single-direction AGV traffic "
+                f"at very low speed. High collision risk."
+            )
+            issues.append(
+                f"Aisle width ({warehouse.aisle_width}m) critically narrow — "
+                f"single-direction only, high collision risk"
+            )
+            actions.append(
+                f"Aisles must be widened from {warehouse.aisle_width}m to at least {self.MIN_AISLE_WIDTH}m — "
+                f"this is a blocking requirement"
+            )
         else:
             aisle_score = 0.0
+            aisle_status = "inadequate"
+            aisle_detail = (
+                f"Aisle width ({warehouse.aisle_width}m) is below absolute minimum (2.0m). "
+                f"AGVs physically cannot operate in these aisles."
+            )
+            issues.append(
+                f"Aisle width ({warehouse.aisle_width}m) is below 2.0m — "
+                f"AGVs physically cannot fit"
+            )
+            actions.append(
+                "Complete aisle redesign required — current layout cannot accommodate any AGV"
+            )
+
         score += aisle_score
+        factors.append(FeasibilityFactor(
+            name="Aisle Width", score=aisle_score, max_score=4.0,
+            weight="40%", status=aisle_status, detail=aisle_detail,
+        ))
         self.conversion_notes.append(f"Aisle width score: {aisle_score}/4.0")
 
-        # Layout regularity score (25% weight, max 2.5 points)
-        # Grid-based layouts get full points
-        regularity_score = 2.5  # Assuming regular grid for Layout A
+        # ── Factor 2: Layout Regularity (25%, max 2.5) ──
+        # Evaluate based on whether aisles are parallel and evenly spaced
+        aisle_zones = [z for z in warehouse.zones if z.zone_type == ZoneType.AISLE]
+        if len(aisle_zones) >= 2:
+            # Check if aisles have consistent width and spacing
+            widths = [z.width for z in aisle_zones]
+            x_positions = sorted([z.x for z in aisle_zones])
+            spacings = [x_positions[i+1] - x_positions[i] for i in range(len(x_positions) - 1)]
+
+            width_consistent = len(set(widths)) == 1
+            spacing_consistent = len(spacings) == 0 or (max(spacings) - min(spacings)) < 1.0
+
+            if width_consistent and spacing_consistent:
+                regularity_score = 2.5
+                regularity_status = "optimal"
+                regularity_detail = (
+                    f"Layout has {len(aisle_zones)} evenly spaced parallel aisles with "
+                    f"consistent {widths[0]}m width. Ideal grid pattern for AGV navigation."
+                )
+            elif width_consistent or spacing_consistent:
+                regularity_score = 1.5
+                regularity_status = "acceptable"
+                regularity_detail = (
+                    "Layout is partially regular — aisles exist but spacing or widths are inconsistent."
+                )
+                issues.append("Aisle spacing or widths are not fully consistent — may complicate path planning")
+                actions.append("Standardize aisle widths and spacing where possible for simpler AGV routing")
+            else:
+                regularity_score = 0.5
+                regularity_status = "poor"
+                regularity_detail = (
+                    "Layout is irregular — aisles have varying widths and uneven spacing."
+                )
+                issues.append("Irregular layout with varying aisle widths and spacing")
+                actions.append("Consider restructuring aisles into a regular grid pattern")
+        elif len(aisle_zones) == 1:
+            regularity_score = 1.0
+            regularity_status = "marginal"
+            regularity_detail = "Only 1 aisle detected — minimal grid structure for AGV navigation."
+            issues.append("Single-aisle layout provides very limited routing options for AGVs")
+            actions.append("Add parallel aisles to create redundant paths and reduce congestion")
+        else:
+            regularity_score = 0.0
+            regularity_status = "inadequate"
+            regularity_detail = "No aisles detected — cannot establish AGV navigation grid."
+            issues.append("No aisle zones defined — AGV pathfinding is not possible")
+            actions.append("Define aisle zones in the warehouse layout before attempting retrofit")
+
         score += regularity_score
+        factors.append(FeasibilityFactor(
+            name="Layout Regularity", score=regularity_score, max_score=2.5,
+            weight="25%", status=regularity_status, detail=regularity_detail,
+        ))
         self.conversion_notes.append(f"Layout regularity score: {regularity_score}/2.5")
 
-        # Space utilization score (20% weight, max 2 points)
+        # ── Factor 3: Space Utilization (20%, max 2.0) ──
         total_area = warehouse.width * warehouse.length
         aisle_area = warehouse.aisles * warehouse.aisle_width * warehouse.aisle_length
         utilization = aisle_area / total_area if total_area > 0 else 0
 
         if 0.3 <= utilization <= 0.5:
             space_score = 2.0
+            space_status = "optimal"
+            space_detail = (
+                f"Space utilization is {utilization:.1%} — optimal balance between "
+                f"storage density and AGV maneuverability."
+            )
         elif 0.2 <= utilization < 0.3 or 0.5 < utilization <= 0.6:
             space_score = 1.5
+            space_status = "acceptable"
+            space_detail = (
+                f"Space utilization is {utilization:.1%} — slightly outside optimal range (30-50%). "
+                f"AGV operation feasible but not ideal."
+            )
+            if utilization > 0.5:
+                issues.append(
+                    f"Space utilization ({utilization:.1%}) is high — aisles may feel congested during peak traffic"
+                )
+                actions.append("Consider reducing storage density or adding buffer zones for AGV queuing")
+            else:
+                issues.append(
+                    f"Space utilization ({utilization:.1%}) is low — warehouse may be underutilized"
+                )
+                actions.append("Opportunity to add more storage racks or buffer areas")
         else:
             space_score = 1.0
+            space_status = "poor" if utilization > 0.6 else "marginal"
+            space_detail = (
+                f"Space utilization is {utilization:.1%} — "
+                f"{'too dense for safe AGV operation' if utilization > 0.6 else 'significantly underutilized'}."
+            )
+            if utilization > 0.6:
+                issues.append(
+                    f"Space utilization ({utilization:.1%}) is critically high — "
+                    f"AGVs will face constant congestion and collision risk"
+                )
+                actions.append("Remove some storage racks or widen aisles to bring utilization below 50%")
+            else:
+                issues.append(f"Space utilization ({utilization:.1%}) is very low")
+                actions.append("Layout has excess open space — optimize rack placement")
+
         score += space_score
+        factors.append(FeasibilityFactor(
+            name="Space Utilization", score=space_score, max_score=2.0,
+            weight="20%", status=space_status, detail=space_detail,
+        ))
         self.conversion_notes.append(f"Space utilization score: {space_score}/2.0 (utilization: {utilization:.1%})")
 
-        # Accessibility score (15% weight, max 1.5 points)
-        # Based on zone placement
+        # ── Factor 4: Accessibility (15%, max 1.5) ──
         pickup_zone = next((z for z in warehouse.zones if z.zone_type == ZoneType.PICKUP), None)
         drop_zone = next((z for z in warehouse.zones if z.zone_type == ZoneType.DROP), None)
 
         if pickup_zone and drop_zone:
-            # Check if zones are at corners/edges (good) vs center (less optimal)
             accessibility_score = 1.5
-        else:
+            accessibility_status = "optimal"
+            accessibility_detail = (
+                "Both pickup and drop zones are defined and positioned at warehouse edges — "
+                "ideal for AGV ingress/egress without crossing active storage areas."
+            )
+        elif pickup_zone or drop_zone:
             accessibility_score = 1.0
+            accessibility_status = "marginal"
+            missing = "drop" if pickup_zone else "pickup"
+            accessibility_detail = f"Only {'pickup' if pickup_zone else 'drop'} zone defined. Missing {missing} zone."
+            issues.append(f"Missing {missing} zone — AGVs need both endpoints for task routing")
+            actions.append(f"Define a {missing} zone at a warehouse edge for complete task flow")
+        else:
+            accessibility_score = 0.0
+            accessibility_status = "inadequate"
+            accessibility_detail = "Neither pickup nor drop zones are defined. AGV task routing is impossible."
+            issues.append("No pickup or drop zones defined — AGVs have no task endpoints")
+            actions.append("Define both pickup and drop zones before attempting retrofit")
+
         score += accessibility_score
+        factors.append(FeasibilityFactor(
+            name="Accessibility", score=accessibility_score, max_score=1.5,
+            weight="15%", status=accessibility_status, detail=accessibility_detail,
+        ))
         self.conversion_notes.append(f"Accessibility score: {accessibility_score}/1.5")
 
-        # Final score
+        # ── Final Score & Grading ──
         final_score = round(score, 1)
         self.conversion_notes.append(f"Final feasibility score: {final_score}/10.0")
 
-        return final_score
+        if final_score >= 9.0:
+            grade, label = "A", "Excellent"
+            verdict = "Ready for retrofit — minimal changes needed"
+        elif final_score >= 7.0:
+            grade, label = "B", "Good"
+            verdict = "Feasible with minor adjustments"
+        elif final_score >= 5.0:
+            grade, label = "C", "Marginal"
+            verdict = "Feasible but needs significant work before AGV deployment"
+        elif final_score >= 3.0:
+            grade, label = "D", "Poor"
+            verdict = "Major retrofitting required before any AGV operation"
+        else:
+            grade, label = "F", "Fail"
+            verdict = "Not feasible — complete warehouse redesign required"
+
+        is_feasible = final_score >= 5.0
+
+        if not issues:
+            issues.append("No issues found — all factors meet optimal thresholds")
+        if not actions:
+            actions.append("No actions required — warehouse is ready for AGV deployment")
+
+        return FeasibilityAssessment(
+            score=final_score,
+            grade=grade,
+            label=label,
+            verdict=verdict,
+            is_feasible=is_feasible,
+            factors=factors,
+            issues=issues,
+            actions=actions,
+        )

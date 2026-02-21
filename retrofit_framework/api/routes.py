@@ -21,6 +21,8 @@ from api.schemas import (
     TrafficRule,
     PriorityZone,
     NoStoppingZone,
+    FeasibilityAssessmentResponse,
+    FeasibilityFactorResponse,
 )
 from data.layout_a import create_layout_a_warehouse
 from core.converter import RetrofitConverter
@@ -318,13 +320,49 @@ def _build_conversion_summary(
     total_nodes: int,
     total_edges: int
 ) -> ConversionSummary:
-    """Build conversion summary with statistics and recommendations."""
+    """Build conversion summary with statistics, recommendations, and feasibility grading."""
 
     # Calculate if aisle width is adequate (>= 3.0m)
     aisle_width_adequate = legacy_warehouse.aisle_width >= 3.0
 
-    # Get feasibility score
+    # Get feasibility score and assessment
     feasibility_score = getattr(robotic_warehouse, 'feasibility_score', 8.5)
+    assessment = getattr(robotic_warehouse, 'feasibility_assessment', None)
+
+    # Build the feasibility assessment response
+    if assessment:
+        feasibility_assessment = FeasibilityAssessmentResponse(
+            score=assessment.score,
+            grade=assessment.grade,
+            label=assessment.label,
+            verdict=assessment.verdict,
+            is_feasible=assessment.is_feasible,
+            factors=[
+                FeasibilityFactorResponse(
+                    name=f.name,
+                    score=f.score,
+                    max_score=f.max_score,
+                    weight=f.weight,
+                    status=f.status,
+                    detail=f.detail,
+                )
+                for f in assessment.factors
+            ],
+            issues=assessment.issues,
+            actions=assessment.actions,
+        )
+    else:
+        # Fallback if assessment is missing (should not happen with updated converter)
+        feasibility_assessment = FeasibilityAssessmentResponse(
+            score=feasibility_score,
+            grade="B" if feasibility_score >= 7.0 else "C",
+            label="Good" if feasibility_score >= 7.0 else "Marginal",
+            verdict="Assessment unavailable — using legacy scoring",
+            is_feasible=feasibility_score >= 5.0,
+            factors=[],
+            issues=["Detailed assessment not available"],
+            actions=["Re-run conversion with updated framework"],
+        )
 
     # Build recommendations based on conversion
     recommendations = []
@@ -336,7 +374,6 @@ def _build_conversion_summary(
             f"Consider widening aisles from {legacy_warehouse.aisle_width}m to at least 3.0m"
         )
 
-    # Add general recommendations
     recommendations.append("Regular grid layout is ideal for autonomous navigation")
     recommendations.append(f"Total of {len(robotic_warehouse.charging_stations)} charging stations placed strategically")
 
@@ -352,6 +389,7 @@ def _build_conversion_summary(
         total_edges=total_edges,
         charging_stations_count=len(robotic_warehouse.charging_stations),
         feasibility_score=feasibility_score,
+        feasibility_assessment=feasibility_assessment,
         aisle_width_adequate=aisle_width_adequate,
         recommendations=recommendations
     )

@@ -156,6 +156,30 @@ class TrafficRule(BaseModel):
     description: Optional[str] = Field(None, description="Human-readable description of the rule")
 
 
+class FeasibilityFactor(BaseModel):
+    """Breakdown of a single feasibility scoring factor."""
+
+    name: str = Field(..., description="Factor name (e.g., 'Aisle Width')")
+    score: float = Field(..., description="Score achieved for this factor")
+    max_score: float = Field(..., description="Maximum possible score for this factor")
+    weight: str = Field(..., description="Weight percentage (e.g., '40%')")
+    status: str = Field(..., description="Status: optimal, acceptable, marginal, poor, inadequate")
+    detail: str = Field(..., description="Explanation of the score")
+
+
+class FeasibilityAssessment(BaseModel):
+    """Complete feasibility grading with score breakdown and actionable guidance."""
+
+    score: float = Field(..., description="Overall feasibility score (0-10)")
+    grade: str = Field(..., description="Letter grade: A, B, C, D, or F")
+    label: str = Field(..., description="Human-readable label (e.g., 'Excellent')")
+    verdict: str = Field(..., description="One-line verdict on retrofit readiness")
+    is_feasible: bool = Field(..., description="Whether the warehouse passes minimum viability (score >= 5.0)")
+    factors: list[FeasibilityFactor] = Field(..., description="Per-factor score breakdown")
+    issues: list[str] = Field(default_factory=list, description="List of issues found (empty if none)")
+    actions: list[str] = Field(default_factory=list, description="Recommended actions to improve score")
+
+
 class RoboticWarehouse(LegacyWarehouse):
     """Represents a warehouse retrofitted with robotic systems."""
 
@@ -175,6 +199,9 @@ class RoboticWarehouse(LegacyWarehouse):
     )
     feasibility_score: float = Field(
         default=0.0, description="Feasibility score for robotic conversion (0-10)"
+    )
+    feasibility_assessment: Optional[FeasibilityAssessment] = Field(
+        default=None, description="Detailed feasibility grading with breakdown and guidance"
     )
     conversion_notes: list[str] = Field(
         default_factory=list, description="Notes and recommendations from conversion"
